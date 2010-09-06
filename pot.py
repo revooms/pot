@@ -14,9 +14,6 @@ sys.path.append(os.path.abspath(os.path.dirname(sys.executable)))
 stored = False
 
 default_config = """
-[settings]
-debug = False
-
 [remote]
 host = example.com
 port = 25565
@@ -45,20 +42,15 @@ class MinecraftBot:
 
     def reset(self):
         self.log('Starting Minecraftbot')
-        #self.log('system: %s %s' % (sys.platform, sys.version))
 
         if not self.load_config():
             self.log('Failed loading the configuration file, this is fatal.')
             exit()
         else:
-            self.dlog('Loaded configuration!')
+            self.log('Loaded configuration!')
 
     def log(self, msg):
         print '%s [BOT] %s' % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), msg)
-
-    def dlog(self, msg):
-        if self.debug:
-            print '%s [BOT] %s' % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), msg)
 
     def log_exception(self, function, exception):
         self.log(' *** Exception %s in %s' % (exception,function))
@@ -72,7 +64,7 @@ class MinecraftBot:
             return False
 
         if os.path.isfile('bot.ini'):
-            self.dlog('Found configuration, loading...')
+            self.log('Found configuration, loading...')
 
             try:
                 config.read('bot.ini')
@@ -80,7 +72,7 @@ class MinecraftBot:
                 self.log_exception('load_config()', cpe)
                 return False
         else:
-            self.dlog('Could not find an existing configuration, creating it...')
+            self.log('Could not find an existing configuration, creating it...')
 
             try:
                 config_file = open('bot.ini', 'w')
@@ -97,9 +89,7 @@ class MinecraftBot:
             self.username = config.get('remote', 'username')
             self.password = config.get('remote', 'password')
             self.address = (self.host, self.port)
-            self.loading_map    = True
             
-            self.debug = True
             self.name = ''
             self.sessionid = ''
             self.ticket = ''
@@ -117,7 +107,7 @@ class MinecraftBot:
     def getversion(self):
         login = mechanize.Browser()
 
-        self.dlog('Going online')
+        self.log('Going online')
         login.open("http://minecraft.net/login.jsp")
         login.select_form("input")
         login["username"] = self.username
@@ -132,7 +122,7 @@ class MinecraftBot:
             self.name = parts[2]
             self.sessionid = parts[3]
             
-        self.dlog("Version: %s, Ticket: %s, Name: %s, Session: %s" % (self.version, self.ticket, self.name, self.sessionid))
+        self.log("Version: %s, Ticket: %s, Name: %s, Session: %s" % (self.version, self.ticket, self.name, self.sessionid))
         
     def get_latest_clientjar(self):
         self.log("Checking for new version")
@@ -140,7 +130,7 @@ class MinecraftBot:
         clientcheck = clientdownload.open("http://minecraft.net/game/minecraft.jar?user=%s&ticket=%s" % (self.username, self.ticket)).read().splitlines()
 
     def login(self):
-        self.dlog('Authenticating with %s:%s (%s)' % (self.host, self.port, socket.gethostbyname(self.host)) );
+        self.log('Authenticating with %s:%s (%s)' % (self.host, self.port, socket.gethostbyname(self.host)) );
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except Exception, e:
@@ -169,7 +159,7 @@ class MinecraftBot:
         loginurl = "http://www.minecraft.net/game/joinserver.jsp?user=%s&sessionId=%s&serverId=%s" %(self.username, self.sessionid, self.serverid)
         login = mechanize.Browser()
 
-        self.dlog("Logging in to %s" % loginurl)
+        self.log("Logging in to %s" % loginurl)
         data = login.open(loginurl)
         
         """
@@ -199,15 +189,15 @@ class MinecraftBot:
         
         data = s.send(login_packet)
         s.recv(4096);
-        self.dlog('Sent %s %s' % (repr(data), repr(login_packet)))
+        #self.log('Sent %s %s' % (repr(data), repr(login_packet)))
 
         while True:
             ping = struct.pack('b', 0x00)
             s.send(ping)
             data = s.recv(4096)
             pieces = [data[i:i+1] for i in range(0, len(data), 1)]
-            self.dlog("Data: %s" % pieces)
-            self.log('S: %s - R: %s' % (repr(ping), data))
+            #self.log("Data: %s" % pieces)
+            self.log('S: %s - R: %s' % (repr(ping), repr(data)))
             time.sleep(20)
 
         s.close()
