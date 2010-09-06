@@ -143,8 +143,7 @@ class MinecraftBot:
        
         handshake = ''        
         handshake += struct.pack('b', 0x02) ## packet type
-        handshake += struct.pack('b', 0x00) ## length of ... 
-        handshake += struct.pack('b', 0x08) ## ...
+        handshake += struct.pack('!H', len(self.name)) ## pack name length into unsigned int, network (big-endian) byte order
         handshake += self.name              ## name
         #self.log(handshake)
         data = s.send(handshake)
